@@ -32,6 +32,27 @@
   height: 7vh;
   justify-content: center;
 }
+.flex-list span{
+  font-size: medium ;
+}
+.flex-list select{
+  width: 4vh;
+  height: 3vh;
+  font-size: medium ;
+}
 .flex-list:nth-child(odd) {
   background-color: #ffc74a99;
+}
+.flex-list:nth-child(even) {
+  background-color: #f0686899;
+}
+
+button{
+  margin: 5px;
+  padding: 7px;
+ 
+}
+button:hover{
+  transform: scale(1.1);
+  transition: transform 0.3s ease-in-out;
 }

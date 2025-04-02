@@ -4,11 +4,14 @@ import {
   Result,
   NotFoundException,
 } from "@zxing/library";
+import { useData } from "../../Provider/DataProvider";
+import { toast } from "react-toastify";
 
 const BarcodeScanner: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [scanResult, setScanResult] = useState<string>("");
   const [error, setError] = useState<string>("");
+  const {ProductList,setScannedProductList,SelectedPage,setScannedResult}=useData()
   const [isScanning, setIsScanning] = useState<boolean>(false);
   const codeReader = useRef<BrowserMultiFormatReader | null>(null);
 
@@ -22,6 +25,21 @@ const BarcodeScanner: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (scanResult && ProductList.length > 0) {
+      // Find the product with matching barcode
+      const scannedProduct = ProductList.find(product => product.barcode === scanResult);
+      if (SelectedPage==1){
+      if (scannedProduct ) {
+        setScannedProductList(scannedProduct)
+      } else {
+        toast.warn(`${scanResult} لا يوجد منتج يحمل هذا الرقم `,{style:{color:"#f23838"}});
+      }
+    }
+      setScannedResult(scanResult);
+  }
+  }, [scanResult, ProductList]);
+  
   const startScanning = async () => {
     if (!codeReader.current || !videoRef.current) return;
 
@@ -63,7 +81,7 @@ const BarcodeScanner: React.FC = () => {
 
   return (
     <div className="barcode-scanner">
-      <h2>Barcode Scanner</h2>
+
 
       {/* Hidden video element - still needed for scanning */}
       <video
@@ -73,22 +91,17 @@ const BarcodeScanner: React.FC = () => {
 
       <div className="scanner-controls">
         {!isScanning ? (
-          <button className="bg-red-500" onClick={startScanning} disabled={isScanning}>
-            Start Scanning
+          <button className="bg-orange-400" onClick={startScanning} disabled={isScanning}>
+            قراءة المنتجات
           </button>
         ) : (
-          <button className="bg-red-500" onClick={stopScanning} disabled={!isScanning}>
-            Stop Scanning
+          <button className="bg-orange-400" onClick={stopScanning} disabled={!isScanning}>
+           ايقاف القراءه
           </button>
         )}
       </div>
 
-      {scanResult && (
-        <div className="scan-result">
-          <h3>Scan Result:</h3>
-          <p>{scanResult}</p>
-        </div>
-      )}
+    
 
       {error && (
         <div className="error-message" style={{ color: "red" }}>

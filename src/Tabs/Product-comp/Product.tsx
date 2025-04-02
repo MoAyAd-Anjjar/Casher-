@@ -1,13 +1,17 @@
 import React from "react";
 import { useState } from "react";
+import {useData} from "../../Provider/DataProvider"
+import { toast } from "react-toastify";
+import { Product } from "../../Type/Types";
 const ProductForm = () => {
   const [ViewIMG, setViewIMG] = useState<null| string>("")
-  const [product, setProduct] = useState({
+  const {setPage}=useData()
+  const [product, setProduct] = useState<Product>({
     name: "",
     vendor: "",
-    price: "",
+    price: 0,
     barcode: "",
-    image: null as File | null,
+    image: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -22,16 +26,29 @@ const ProductForm = () => {
     setViewIMG(URL.createObjectURL(e.target.files![0]))
 
   };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!window.electronAPI) {
+      toast.error("Electron API not available");
+      return;
+    }
   
-    if (window.electronAPI) {
-      window.electronAPI.CreateProduct(product);
-        
+    try {
+      const success = await window.electronAPI.CreateProduct(product);
+      console.log(success);
+      
+      if (success) {
+        toast.success("تم انشاء المنتج بنجاح");
+        setPage(0);
+      } else {
+        toast.error("فشل إنشاء المنتج. الرجاء التأكد من البيانات أو أن الباركود  مستخدم مسبقاً");
+      }
+    } catch (error) {
+      console.error("Error creating product:", error);
+      toast.error("حدث خطأ غير متوقع أثناء إنشاء المنتج");
     }
   };
-
 
   return (
     <div className="max-w-screen-2xl mx-auto p-6 bg-white shadow-xl rounded-xl flex  w-max  flex-col transform transition-all duration-500 hover:scale-105 hover:shadow-2xl">

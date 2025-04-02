@@ -9,7 +9,6 @@ function Cash() {
     <div className='flex w-auto'>
       <View/>      
       <List/>
-      {/* <Camera/> */}
     </div>
   )
 }

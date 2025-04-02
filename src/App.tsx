@@ -8,32 +8,38 @@ import ProductForm from "./Tabs/Product-comp/Product";
 import Debt from "./Tabs/Debt-comp/Debt";
 import Modify from "./Tabs/Modify-comp/Modify";
 import User from "./Tabs/User-comp/User";
+import useProduct from "./hook/ProductHook";
+import { useData } from "./Provider/DataProvider";
+import Model from "./Tabs/model/modle";
 
 function App() {
-  const changeTab = (Page: number) => {
-    setCount(Page);
-  };
-  const [count, setCount] = useState<number>(0);
 
+  const {getProducts}=useProduct()
+  const {SelectedPage,setPage}=useData()
+  useEffect(() => {
+    getProducts()
+  }, [])
+  
   return (
     <>
 
-      {count > 0 && (
+      {SelectedPage > 0 && (
         <div className="absolute top-[0%] left-[0%]">
           <FaArrowLeft
-            onClick={() => setCount(0)}
+            onClick={() => setPage(0)}
             cursor="pointer"
             size={45}
             style={{ background: "wheat" }}
           />
         </div>
       )}
-      {count === 0 ? <Main Page={changeTab} /> : ""}
-      {count === 1 ? <Cash /> : ""}
-      {count === 2 ? <ProductForm /> : ""}
-      {count === 3 ? <Debt /> : ""}
-      {count === 4 ? <Modify /> : ""}
-      {count === 5 ? <User /> : ""}
+      {SelectedPage === 0 ? <Main  /> : ""}
+      {SelectedPage === 1 ? <Cash /> : ""}
+      {SelectedPage === 2 ? <ProductForm /> : ""}
+      {SelectedPage === 3 ? <Debt /> : ""}
+      {SelectedPage === 4 ? <Modify /> : ""}
+      {SelectedPage === 5 ? <User /> : ""}
+
     </>
   );
 }
