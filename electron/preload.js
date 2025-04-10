@@ -5,4 +5,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
   getProductList: () => ipcRenderer.invoke("Get-Product"),
   DeleteProduct: (product) => ipcRenderer.invoke("Delete-Product",product),
   UpdateProduct: (product) => ipcRenderer.invoke("Update-Product",product),
+  CreateUserInfo:(Debt) => ipcRenderer.invoke("Create-User-info", Debt),
+  GetUsersInfo:() => ipcRenderer.invoke("Get-User-info")
+
 });

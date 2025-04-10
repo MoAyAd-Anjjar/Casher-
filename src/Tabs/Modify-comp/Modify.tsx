@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Product } from "../../Type/Types";
 import Camera from "../Cash-comp/Camera";
 import { useData } from "../../Provider/DataProvider";
-import Model from "../model/modle";
+import Model from "../Model/Model";
 import { toast } from "react-toastify";
 
 const Modify = () => {
@@ -17,7 +17,7 @@ const Modify = () => {
     image: "",
     price: 0 // Added missing price field to match your form
   });
-  const { ScanResult } = useData();
+  const { ScanResult,setPage ,setScannedResult} = useData();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -54,7 +54,7 @@ const Modify = () => {
       }
     };
 
-    if (ScanResult) {
+    if (ScanResult!="") {
       getList();
     }
   }, [ScanResult]);

@@ -1,141 +1,203 @@
-import React,{useState} from 'react';
+import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import { useData } from "../../Provider/DataProvider";
+import { Product, DebtFormData } from "../../Type/Types";
+import InputField from "../../common/Input";
 
 // Define types for our data
-type Person = {
-  id: number;
-  name: string;
-  age: number;
-  department: string;
-  status: 'active' | 'inactive' | 'on leave';
-  price: number; // Assuming price is a decimal
-};
 
 // Sample data
-const peopleData: Person[] = [
-  { id: 1, name: 'John Doe', age: 32, department: 'Marketing', status: 'active',price: 0},
-  { id: 2, name: 'Jane Smith', age: 28, department: 'Sales', status: 'active' ,price: 0},
-  { id: 3, name: 'Robert Johnson', age: 45, department: 'IT', status: 'inactive' ,price: 0},
-  { id: 4, name: 'Emily Davis', age: 30, department: 'HR', status: 'on leave' ,price: 0},
-  { id: 5, name: 'Michael Brown', age: 38, department: 'Finance', status: 'active',price: 0 },
-  { id: 5, name: 'Michael Brown', age: 38, department: 'Finance', status: 'active',price: 0 },
-  { id: 5, name: 'Michael Brown', age: 38, department: 'Finance', status: 'active',price: 0 },
-  { id: 5, name: 'Michael Brown', age: 38, department: 'Finance', status: 'active',price: 0 },
-  { id: 5, name: 'Michael Brown', age: 38, department: 'Finance', status: 'active',price: 0 },
-  { id: 5, name: 'Michael Brown', age: 38, department: 'Finance', status: 'active',price: 0 },
-  { id: 5, name: 'Michael Brown', age: 38, department: 'Finance', status: 'active',price: 0 },
-  { id: 5, name: 'Michael Brown', age: 38, department: 'Finance', status: 'active',price: 0 },
-  { id: 5, name: 'Michael Brown', age: 38, department: 'Finance', status: 'active',price: 0 },
-  { id: 5, name: 'Michael Brown', age: 38, department: 'Finance', status: 'active',price: 0 },
-  { id: 5, name: 'Michael Brown', age: 38, department: 'Finance', status: 'active',price: 0 },
-  { id: 5, name: 'Michael Brown', age: 38, department: 'Finance', status: 'active',price: 0 },
-  { id: 5, name: 'Michael Brown', age: 38, department: 'Finance', status: 'active',price: 0 },
-  { id: 5, name: 'Michael Brown', age: 38, department: 'Finance', status: 'active',price: 0 },
-  { id: 5, name: 'Michael Brown', age: 38, department: 'Finance', status: 'active',price: 0 },
-  { id: 5, name: 'Michael Brown', age: 38, department: 'Finance', status: 'active',price: 0 },
-  { id: 5, name: 'Michael Brown', age: 38, department: 'Finance', status: 'active',price: 0 },
-  { id: 5, name: 'Michael Brown', age: 38, department: 'Finance', status: 'active',price: 0 },
-
-];
 
 // Filter options
-type FilterOption = 'all' | 'active' | 'inactive' | 'on leave'| "none";
+type FilterOption = "all" | "active" | "inactive" | "on leave" | "none";
 const Debt = () => {
-  const [filter, setFilter] = useState<FilterOption>('none');
+  const { setPage, ScanProduct } = useData();
+  const [PeopleData, setPeopleData] = useState<DebtFormData[]>([]);
+  const [PersonDebt, setPersonDebt] = useState<number>();
+  const [PersonDebtNotes, setPersonDebtNotes] = useState<string>("");
+  const [PersonDebtList, setPersonDebtList] = useState<Product[] | any>([]);
+  const [PersonDebtName, setPersonDebtName] = useState<string>("");
+
+  useEffect(() => {
+    const getUsers = async () => {
+      if (!window.electronAPI) {
+        toast.error("Electron API not available");
+        return;
+      }
+
+      const result: DebtFormData[] = await window.electronAPI.GetUsersInfo();
+      if (result.length > 0) {
+        setPeopleData(result);
+      }
+    };
+    getUsers();
+  }, []);
+  var HandelSearch = (value: number | string) => {
+    if (value.toString().trim()) {
+      const filtered: any = PeopleData.filter(
+        (pr) => pr.name.toLowerCase() === value.toString().trim().toLowerCase()
+      );
+
+      if (filtered.length > 0) {
+        const firstMatch = filtered[0];
+
+        if (firstMatch.DebtList != null && firstMatch != null) {
+          setPersonDebtNotes(firstMatch.notes);
+          setPersonDebtName(firstMatch.name);
+
+          setPersonDebtList(JSON.parse(firstMatch.DebtList) || []);
+          ScanProduct.map((pro: Product) =>
+            setPersonDebtList((prev) => [...prev, pro])
+          );
+          const newTotal = ScanProduct.reduce(
+            (sum, product) => sum + product.price * (product.quantity || 1),
+            0
+          );
+
+          setPersonDebt(newTotal);
+        } else {
+          setPersonDebtNotes("");
+          setPersonDebtName("");
+          setPersonDebtList(null);
+          setPersonDebt(0);
+        }
+      }
+    } else {
+      setPersonDebtNotes("");
+      setPersonDebtName("");
+      setPersonDebtList(null);
+      setPersonDebt(0);
+    }
+  };
 
   // Filter data based on selected option
-  const filteredData = filter === 'all' 
-    ? peopleData 
-    : peopleData.filter(person => person.status === filter);
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">دين العاميل الحالي
+    <div className="p-6 max-w-6xl mx-auto h-[90vh]">
+      <h1 className="text-2xl font-bold text-gray-800 mb-6">
+        دين العاميل الحالي
       </h1>
-      
+
       {/* Filter control */}
-      <div className="mb-6 flex items-center">
-        <label htmlFor="status-filter" className="mr-3 text-gray-700 font-medium">
-          Filter by Status:
-        </label>
-        <select
-          id="status-filter"
-          value={filter}
-          onChange={(e) => setFilter(e.target.value as FilterOption)}
-          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        >
-          <option value="all">All Employees</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-          <option value="on leave">On Leave</option>
-          <option value="none">None</option>
-
-        </select>
+      <div
+        dir="rlt"
+        className="mb-6 flex rtl:ml-0 items-center w-full flex-row-reverse gap-2"
+      >
+        <InputField
+          name="userName"
+          type="text"
+          label="اسم العميل"
+          onChange={(e) => HandelSearch(e.target.value)}
+        ></InputField>
+        <InputField
+          name="userData"
+          type="date"
+          label=" تاريخ الدين"
+        ></InputField>
+        <InputField
+          name="userDebt"
+          type="text"
+          label="قيمة الدين"
+          defaultValue={PersonDebt}
+        ></InputField>
+        <InputField
+          name="userDebt"
+          type="textarea"
+          label="ملاحظات العميل"
+          defaultValue={PersonDebtNotes}
+        ></InputField>
       </div>
-
       {/* Table */}
       <div className="overflow-x-auto shadow-md rounded-lg">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-200">
-            <tr className='text-center'>
-              <th scope="col" className="px-6 py-3  text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <tr className="text-center">
+              <th
+                scope="col"
+                className="px-6 py-3  text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 رقم
               </th>
-              <th scope="col" className="px-6 py-3  text-xs font-medium text-gray-500 uppercase tracking-wider">
-                المزود
+              <th
+                scope="col"
+                className="px-6 py-3  text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                اسم العميل
               </th>
-              <th scope="col" className="px-6 py-3  text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                className="px-6 py-3  text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 تاريخ
               </th>
-              <th scope="col" className="px-6 py-3  text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                className="px-6 py-3  text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 المنتج
               </th>
-              <th scope="col" className="px-6 py-3  text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                className="px-6 py-3  text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 السعر
               </th>
-              <th scope="col" className="px-6 py-3  text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                className="px-6 py-3  text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                كميه
+              </th>
+              <th
+                scope="col"
+                className="px-6 py-3  text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 العمليات
               </th>
-
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {filteredData.length > 0 ? (
-              filteredData.map((person) => (
-                <tr key={person.id} className="hover:bg-gray-50">
+            {PersonDebtList?.length > 0 && PersonDebtList ? (
+              PersonDebtList.map((person, index) => (
+                <tr key={index} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {person.id}
+                    {person.barcode}
                   </td>
+
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{person.name}</div>
+                    <div className="text-sm font-medium text-gray-900">
+                      {PersonDebtName}
+                    </div>
+                  </td>
+
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {person.InsertDate}
+                  </td>
+
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {person.name}{" "}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {person.age}
+                    {person.price}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {person.department}
+                    {person.quantity || 1}
                   </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                        ${person.status === 'active' ? 'bg-green-100 text-green-800' : 
-                          person.status === 'inactive' ? 'bg-red-100 text-red-800' : 
-                          'bg-yellow-100 text-yellow-800'}`}>
-                        {person.price}
-                      </span>
-                    </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                      ${person.status === 'active' ? 'bg-green-100 text-green-800' : 
-                        person.status === 'inactive' ? 'bg-red-100 text-red-800' : 
-                        'bg-yellow-100 text-yellow-800'}`}>
-                      {person.status}
-                    </span>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm ">
+                    <button className="text-white bg-red-500">
+                      ازاله من القائمة
+                    </button>
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
-لا يوجد معلومات للعميل الحالي                </td>
+                <td
+                  colSpan={7}
+                  className="px-6 py-4 text-center text-sm text-gray-500"
+                >
+                  لا يوجد معلومات للعميل الحالي{" "}
+                </td>
               </tr>
             )}
           </tbody>
@@ -145,4 +207,4 @@ const Debt = () => {
   );
 };
 
-export default Debt
+export default Debt;

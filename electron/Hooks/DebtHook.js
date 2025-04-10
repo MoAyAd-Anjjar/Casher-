@@ -1,33 +1,66 @@
-import { toast } from "react-toastify";
-import { ipcMain } from "electron";
+import { ipcMain,Notification } from "electron";
 
-const useDebt = () => {
-  const addDebt = (data) => {
-    if (data && data.CustomerName && data.CustomerDebt) {
-      toast.success(
-        `تم اضافة دين جديد على حساب ${data.CustomerName} بقيمة ${data.CustomerDebt} شيكل بنجاح`,
-        { autoClose: 2000, position: "top-center" }
-      );
-    } else {
-      toast.error(`لم تتوفر المعلومات الكافيه لاضافة الدين`, {
-        autoClose: 2000,
-        position: "top-center",
-      });
-    }
-  };
-  const CreateUserDebt = async (db) => {
-    ipcMain.handle("Create-User-Debt", async (event, List) => {
+const DebtHook = () => {
+
+  const Create_User_Info = (db) => { 
+   ipcMain.handle("Create-User-info", async (_, Debt) => {
+      if (!Debt) return false;
+
       try {
-        console.log(List);
-        
-      } catch (error) {
-        console.log(error);
-      }
-      
-    });
-  };
+        const row = await new Promise((resolve, reject) => {
+          db.get(
+            "SELECT CostumerID FROM debts WHERE name = ?",
+            [Debt.name],
+            (err, row) => (err ? reject(err) : resolve(row))
+          );
+        });
 
-  return { addDebt, CreateUserDebt };
+        if (row) return false;
+ 
+        const success = await new Promise((resolve) => {
+          const stmt = db.prepare(
+            "INSERT INTO debts (CostumerID,name, phone, DebtValue, creationDate, notes,status,DebtList) VALUES (?,?, ?, ?, ?, ?,?, ?)",
+          );
+
+          stmt.run(
+            Debt.CostumerID,
+            Debt.name,
+            Debt.phone,
+            Debt.DebtValue,
+            Debt.creationDate,
+            Debt.notes,
+            Debt.status,
+            JSON.stringify(Debt.DebtList),
+            function (err) {
+              resolve(!err);
+            }
+          );
+          stmt.finalize();
+        });
+
+        return success;
+      } catch (error) {
+        console.error("Create userinfo error:", error);
+        return false;
+      }
+    });
+  }
+  const Get_User_Info =(db) =>{
+    ipcMain.handle("Get-User-info", async () => {
+      return new Promise((resolve, reject) => {
+        db.all("SELECT * FROM debts", (err, rows) => {
+          if (err) {
+            console.error(err);
+            reject(err);
+          } else {
+            resolve(rows);
+          }
+        });
+      });
+    });
+  }
+
+  return { Create_User_Info,Get_User_Info };
 };
 
-export default useDebt;
+export default DebtHook;

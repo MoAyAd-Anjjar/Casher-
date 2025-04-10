@@ -1,11 +1,12 @@
 import React from "react";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import { useData } from "../../Provider/DataProvider";
 
 export default function Model({ Clicked, type, Data, barcode }) {
   const [ViewModel, setViewModel] = useState(Clicked);
   const [Checked, setChecked] = useState(false);
-
+  const { setPage, setScannedResult } = useData();
   const CloseModel = () => setViewModel(false);
 
   const onClicked = async () => {
@@ -17,15 +18,21 @@ export default function Model({ Clicked, type, Data, barcode }) {
         }
         if (barcode == Data.barcode) {
           var Result = await window.electronAPI.UpdateProduct(Data);
-          if (Result) toast.success("تم تعديل المنتج بنجاح");
-          else toast.error("حدث خطا أثناء عملة التعديل");
+          if (Result) {
+            toast.success("تم تعديل المنتج بنجاح");
+            setPage(0);
+            setScannedResult("");
+          } else toast.error("حدث خطا أثناء عملة التعديل");
         } else {
           Result = await window.electronAPI.UpdateProduct({
             ...Data,
             Prevbarcode: barcode,
           });
-          if (Result) toast.success("تم تعديل المنتج بنجاح");
-          else toast.error("حدث خطا أثناء عملة التعديل");
+          if (Result) {
+            toast.success("تم تعديل المنتج بنجاح");
+            setPage(0);
+            setScannedResult("");
+          } else toast.error("حدث خطا أثناء عملة التعديل");
         }
       } catch (error) {
         console.error("Failed to Update product list:", error);
@@ -38,7 +45,12 @@ export default function Model({ Clicked, type, Data, barcode }) {
         }
 
         var Result = await window.electronAPI.DeleteProduct(Data);
-        if (Result) toast.success("تم حذف المنتج بنجاح");
+        if (Result) {
+          toast.success("تم حذف المنتج بنجاح");
+          setPage(0);
+          setScannedResult("");
+        }
+        else
         toast.error("حدث خطا أثناء عملة الحذف");
       } catch (error) {
         console.error("Failed to delete product list:", error);

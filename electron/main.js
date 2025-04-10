@@ -3,9 +3,15 @@ import { fileURLToPath } from "url";
 import path from "path";
 import sqlite3 from "sqlite3";
 import fs from "fs";
+import ProductHook from "../electron/Hooks/ProductHook.js";
+import DebtHook from "./Hooks/DebtHook.js"; "../electron/Hooks/DebtHook.js";
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const { Create_Product, Delete_Product, Update_Product, Get_Product } =
+  ProductHook();
+  const { Create_User_Info,Get_User_Info } = DebtHook();
 
 // Use userData directory for better cross-platform compatibility
 const dbPath = path.join(app.getPath("userData"), "POS.database");
@@ -32,26 +38,75 @@ function initializeDatabase() {
           }).show();
         }
 
-        // Create tables if they don't exist
-        db.run(
-          `CREATE TABLE IF NOT EXISTS products (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        vendor TEXT,
-        price REAL NOT NULL,
-        barcode TEXT UNIQUE,
-        image TEXT
-      )`,
-          (err) => {
-            if (err) {
-              console.error("Error creating table", err);
-              reject(err);
-            } else {
-              console.log("Database ready");
+        // Enable foreign key constraints
+        db.run("PRAGMA foreign_keys = ON");
+
+        // Create products table
+        db.serialize(() => {
+          db.run(
+            `CREATE TABLE IF NOT EXISTS products (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              name TEXT NOT NULL,
+              vendor TEXT,
+              price REAL,
+              quantity INTEGER DEFAULT 0,
+              InsertDate TEXT,
+              barcode TEXT UNIQUE NOT NULL,
+              image TEXT
+            )`,
+            (err) => {
+              if (err) {
+                console.error("Error creating products table", err);
+                reject(err);
+                return;
+              }
+            }
+          );
+
+          // Create debts table
+          db.run(
+            `CREATE TABLE IF NOT EXISTS debts (
+              CostumerID INTEGER PRIMARY KEY AUTOINCREMENT,
+              name TEXT NOT NULL,
+              phone TEXT NOT NULL,
+              DebtValue REAL NOT NULL DEFAULT 0,
+              creationDate TEXT NOT NULL,
+              notes TEXT,
+              DebtList TEXT , 
+              status TEXT DEFAULT 'active' CHECK(status IN ('active', 'paid', 'cancelled'))
+            )`,
+            (err) => {
+              if (err) {
+                console.error("Error creating debts table", err);
+                reject(err);
+                return;
+              }
+            }
+          );
+
+          // Create debt_products junction table
+          db.run(
+            `CREATE TABLE IF NOT EXISTS debt_products (
+              debt_id INTEGER NOT NULL,
+              product_id INTEGER NOT NULL,
+              quantity INTEGER NOT NULL DEFAULT 1,
+              price_at_time REAL NOT NULL,
+              PRIMARY KEY (debt_id, product_id),
+              FOREIGN KEY (debt_id) REFERENCES debts(CostumerID) ON DELETE CASCADE,
+              FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE RESTRICT
+            )`,
+            (err) => {
+              if (err) {
+                console.error("Error creating debt_products table", err);
+                reject(err);
+                return;
+              }
+              
+              console.log("All tables created successfully");
               resolve();
             }
-          }
-        );
+          );
+        });
       }
     );
   });
@@ -87,127 +142,12 @@ app.whenReady().then(async () => {
     }
     await initializeDatabase();
     await createWindow();
-
-    ipcMain.handle("Create-Product", async (_, product) => {
-      if (!product) return false;
-
-      try {
-        const row = await new Promise((resolve, reject) => {
-          db.get(
-            "SELECT id FROM products WHERE barcode = ?",
-            [product.barcode],
-            (err, row) => (err ? reject(err) : resolve(row))
-          );
-        });
-
-        if (row) return false;
-
-        const success = await new Promise((resolve) => {
-          const stmt = db.prepare(
-            "INSERT INTO products (name, vendor, price, barcode, image) VALUES (?, ?, ?, ?, ?)"
-          );
-
-          stmt.run(
-            product.name,
-            product.vendor,
-            product.price,
-            product.barcode,
-            product.image,
-            function (err) {
-              resolve(!err);
-            }
-          );
-          stmt.finalize();
-        });
-
-        return success;
-      } catch (error) {
-        console.error("Create product error:", error);
-        return false;
-      }
-    });
-
-    // Product retrieval handler
-    ipcMain.handle("Get-Product", async () => {
-      return new Promise((resolve, reject) => {
-        db.all("SELECT * FROM products", (err, rows) => {
-          if (err) {
-            console.error(err);
-            reject(err);
-          } else {
-            resolve(rows);
-          }
-        });
-      });
-    });
-
-    ipcMain.handle("Delete-Product", async (_, product) => {
-      return new Promise((resolve, reject) => {
-        db.run(
-          "DELETE FROM products WHERE barcode = ?",
-          [product.barcode],
-          function (err) {
-            if (err) {
-              console.error("Error deleting product:", err);
-              reject(false);
-            } else {
-              // Check if any rows were actually deleted
-              if (this.changes > 0) {
-                resolve(true);
-              } else {
-                console.log("No product found with barcode:", product.barcode);
-                resolve(false);
-              }
-            }
-          }
-        );
-      });
-    });
-
-    ipcMain.handle("Update-Product", async (_, product) => {
-      const targetBarcode=product.Prevbarcode|| product.barcode
-      if (!product ) {
-        console.error("Invalid product data or missing previous barcode");
-        return false;
-      }
-    
-      // Validate the barcode to prevent SQL injection
-      if (!/^[a-zA-Z0-9]+$/.test(targetBarcode)) {
-        console.error("Invalid barcode format");
-        return false;
-      }
-    
-      return new Promise((resolve, reject) => {
-        // Using template literal for WHERE clause
-        const sql = `UPDATE products 
-                     SET name = ?, vendor = ?, price = ?, image = ?, barcode = ?
-                     WHERE barcode = '${targetBarcode}'`;
-        
-        db.run(
-          sql,
-          [
-            product.name,
-            product.vendor,
-            product.price,
-            product.image,
-            product.barcode
-          ],
-          function(err) {
-            if (err) {
-              console.error("Error updating product:", err);
-              reject(false);
-            } else {
-              if (this.changes > 0) {
-                resolve(true);
-              } else {
-                console.log("No product found with barcode:", targetBarcode);
-                resolve(false);
-              }
-            }
-          }
-        );
-      });
-    });
+    await Create_Product(db);
+    await Get_Product(db);
+    await Update_Product(db);
+    await Delete_Product(db);
+    await Create_User_Info(db)
+    await Get_User_Info(db)
   } catch (error) {
     console.error("App initialization failed:", error);
     app.quit();

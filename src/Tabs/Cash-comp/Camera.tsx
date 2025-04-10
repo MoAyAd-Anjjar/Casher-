@@ -11,7 +11,8 @@ const BarcodeScanner: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [scanResult, setScanResult] = useState<string>("");
   const [error, setError] = useState<string>("");
-  const {ProductList,setScannedProductList,SelectedPage,setScannedResult}=useData()
+  const { ProductList, setScannedProductList, SelectedPage, setScannedResult } =
+    useData();
   const [isScanning, setIsScanning] = useState<boolean>(false);
   const codeReader = useRef<BrowserMultiFormatReader | null>(null);
 
@@ -26,20 +27,25 @@ const BarcodeScanner: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    setScannedResult("");
     if (scanResult && ProductList.length > 0) {
       // Find the product with matching barcode
-      const scannedProduct = ProductList.find(product => product.barcode === scanResult);
-      if (SelectedPage==1){
-      if (scannedProduct ) {
-        setScannedProductList(scannedProduct)
-      } else {
-        toast.warn(`${scanResult} لا يوجد منتج يحمل هذا الرقم `,{style:{color:"#f23838"}});
+      const scannedProduct = ProductList.find(
+        (product) => product.barcode === scanResult
+      );
+      if (SelectedPage == 1) {
+        if (scannedProduct) {
+          setScannedProductList(scannedProduct);
+        } else {
+          toast.warn(`${scanResult} لا يوجد منتج يحمل هذا الرقم `, {
+            style: { color: "#f23838" },
+          });
+        }
       }
-    }
       setScannedResult(scanResult);
-  }
+    }
   }, [scanResult, ProductList]);
-  
+
   const startScanning = async () => {
     if (!codeReader.current || !videoRef.current) return;
 
@@ -81,8 +87,6 @@ const BarcodeScanner: React.FC = () => {
 
   return (
     <div className="barcode-scanner">
-
-
       {/* Hidden video element - still needed for scanning */}
       <video
         ref={videoRef}
@@ -91,17 +95,23 @@ const BarcodeScanner: React.FC = () => {
 
       <div className="scanner-controls">
         {!isScanning ? (
-          <button className="bg-orange-400" onClick={startScanning} disabled={isScanning}>
+          <button
+            className="bg-orange-400"
+            onClick={startScanning}
+            disabled={isScanning}
+          >
             قراءة المنتجات
           </button>
         ) : (
-          <button className="bg-orange-400" onClick={stopScanning} disabled={!isScanning}>
-           ايقاف القراءه
+          <button
+            className="bg-orange-400"
+            onClick={stopScanning}
+            disabled={!isScanning}
+          >
+            ايقاف القراءه
           </button>
         )}
       </div>
-
-    
 
       {error && (
         <div className="error-message" style={{ color: "red" }}>

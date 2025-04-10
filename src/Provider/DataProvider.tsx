@@ -9,10 +9,12 @@ const DataContext = createContext<DataProviderType>({
   ScanProduct: [],
   ScanResult: "",
   SelectedPage: 0,
+  PeopleNames: [],
   SetProductList: () => {},
   setScannedProductList: () => {},
   setScannedResult: () => {},
   setPage: () => {},
+  setPeopleNames: () => {},
 });
 
 function DataProvider({ children }: ChildrenNode) {
@@ -20,24 +22,30 @@ function DataProvider({ children }: ChildrenNode) {
   const [ScanProduct, setScanProduct] = useState<Product[] | []>([]);
   const [ScanResult, setScanResult] = useState<string | number>("");
   const [SelectedPage, setSelectedPage] = useState<number>(0);
+  const [PeopleNames, setPeopleName] = useState<string[]>([]);
 
   const SetProductList = (value: Product[]) => {
     setProductList(value);
   };
-  const setScannedProductList = (value: Product | Product[]) => {
+  function formatDateDDMMYY(date) {
+    const day = String(date.getDate()).padStart(2, "0"); // Ensure 2 digits
+    const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-indexed
+    const year = String(date.getFullYear()).slice(-2); // Get last 2 digits of year
 
+    return `${day}/${month}/${year}`;
+  }
+  const setScannedProductList = (value: Product | Product[] | any) => {
     if (Array.isArray(value)) {
       setScanProduct(value);
     } else {
-      setScanProduct((prev: Product[]) => {
+      setScanProduct((prev: any[]) => {
         // Check if product already exists (assuming Product has an 'id' field)
         const alreadyExists = prev.some((product) => product.id === value.id);
 
         if (!alreadyExists) {
+          value = { ...value, InsertDate: formatDateDDMMYY(new Date()) };
           return [...prev, value];
-        }
-
-        else{
+        } else {
           toast.info(`المنتج ${value.name} موجود مسبقاً`);
           return prev;
         }
@@ -50,15 +58,20 @@ function DataProvider({ children }: ChildrenNode) {
   const setPage = (value: number) => {
     setSelectedPage(value);
   };
+  const setPeopleNames = (value: string ) => {
+    PeopleNames.push(...value);
+    };
   const value = {
     ProductList,
     ScanResult,
     ScanProduct,
     SelectedPage,
+    PeopleNames,
     SetProductList,
     setScannedProductList,
     setScannedResult,
     setPage,
+    setPeopleNames,
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
