@@ -45,7 +45,7 @@ const List = () => {
   return (
     <div className="flex flex-col justify-between bg-white w-[60vh] overflow-auto max-h-full">
       <ModelDebt Clicked={Clicked} Data={Data}  Change={ChangeModel}></ModelDebt>
-      <div>
+      <div className="h-full">
         {ScanProduct.length > 0 ? (
           ScanProduct.map((product) => (
             <div className={cashStyle["flex-list"]} key={`${product.id}-${product.barcode}`}>

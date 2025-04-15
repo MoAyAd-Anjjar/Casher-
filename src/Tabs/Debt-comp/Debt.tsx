@@ -26,6 +26,8 @@ const Debt = () => {
       }
 
       const result: DebtFormData[] = await window.electronAPI.GetUsersInfo();
+      
+      
       if (result.length > 0) {
         setPeopleData(result);
       }

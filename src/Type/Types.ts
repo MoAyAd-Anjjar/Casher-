@@ -15,7 +15,7 @@ export interface DebtFormData {
   phone: string;
   DebtValue: number;
   creationDate: string;
-  DebtList: Product[];
+  DebtList: Product[] | null;
   notes: string;
   status?: string;
 }

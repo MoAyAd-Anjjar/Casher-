@@ -12,7 +12,7 @@ declare global {
       CreateUserInfo: (Info:DebtFormData ) => Promise<boolean>;
       GetUsersInfo: () =>Promise<DebtFormData[]>;
       GetUsersDebt: (Info: Product) => Promise<boolean>;
-      AddUsersDebt: (Info: Product) => Promise<boolean>;
+      AddUsersDebt: (Info: DebtFormData) => Promise<boolean>;
       DeleteUserProduct: (Info: Product) => Promise<boolean>;
 
 

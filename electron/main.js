@@ -3,15 +3,15 @@ import { fileURLToPath } from "url";
 import path from "path";
 import sqlite3 from "sqlite3";
 import fs from "fs";
-import ProductHook from "../electron/Hooks/ProductHook.js";
-import DebtHook from "./Hooks/DebtHook.js"; "../electron/Hooks/DebtHook.js";
+import ProductHook from "./Hooks/ProductHook.ts";
+import DebtHook from "./Hooks/DebtHook.ts"; 
 
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const { Create_Product, Delete_Product, Update_Product, Get_Product } =
   ProductHook();
-  const { Create_User_Info,Get_User_Info } = DebtHook();
+  const { Create_User_Info,Get_User_Info,Add_User_Debt } = DebtHook();
 
 // Use userData directory for better cross-platform compatibility
 const dbPath = path.join(app.getPath("userData"), "POS.database");
@@ -49,7 +49,7 @@ function initializeDatabase() {
               name TEXT NOT NULL,
               vendor TEXT,
               price REAL,
-              quantity INTEGER DEFAULT 0,
+              quantity INTEGER DEFAULT 1,
               InsertDate TEXT,
               barcode TEXT UNIQUE NOT NULL,
               image TEXT
@@ -148,6 +148,7 @@ app.whenReady().then(async () => {
     await Delete_Product(db);
     await Create_User_Info(db)
     await Get_User_Info(db)
+    await Add_User_Debt(db)
   } catch (error) {
     console.error("App initialization failed:", error);
     app.quit();

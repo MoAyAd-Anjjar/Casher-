@@ -1,4 +1,6 @@
+import { log } from "console";
 import { ipcMain,Notification } from "electron";
+import { DebtFormData } from "../../src/Type/Types";
 
 const DebtHook = () => {
 
@@ -59,8 +61,22 @@ const DebtHook = () => {
       });
     });
   }
+  const Add_User_Debt=(db)=>{
+    ipcMain.handle("Add-User-info", async (_, Debt:DebtFormData) => {
+      if (!Debt) return false;
 
-  return { Create_User_Info,Get_User_Info };
+      console.log(Debt);
+      return true
+      
+        });
+
+        
+    
+    
+    
+
+  }
+  return { Create_User_Info,Get_User_Info,Add_User_Debt };
 };
 
 export default DebtHook;
