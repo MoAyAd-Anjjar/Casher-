@@ -3,8 +3,8 @@ import { fileURLToPath } from "url";
 import path from "path";
 import sqlite3 from "sqlite3";
 import fs from "fs";
-import ProductHook from "./Hooks/ProductHook.ts";
-import DebtHook from "./Hooks/DebtHook.ts"; 
+import ProductHook from "../electron/Hooks/ProductHook.js";
+import DebtHook from "./Hooks/DebtHook.js"; 
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -51,6 +51,7 @@ function initializeDatabase() {
               price REAL,
               quantity INTEGER DEFAULT 1,
               InsertDate TEXT,
+              InsertTime TEXT,
               barcode TEXT UNIQUE NOT NULL,
               image TEXT
             )`,

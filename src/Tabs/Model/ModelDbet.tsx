@@ -42,8 +42,12 @@ export default function ModelDebt({ Clicked, Change, Data }) {
       };
       console.log(FullCustomerInfo);
       const success: boolean = await window.electronAPI.AddUsersDebt(FullCustomerInfo);
-      if (success)
-        console.log("تم لاضافه");
+      console.log(success);
+      
+      if (success && ScanProduct.length>0)
+       toast.success("نو ارفاق الدين بنجاح")
+      else
+       toast.error("حدث خطأ أثناء ارفاق الدين")
         
       CloseModel();
       setFilterArray([]);

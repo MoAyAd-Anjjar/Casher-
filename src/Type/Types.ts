@@ -5,6 +5,7 @@ export type Product = {
   price?: number;
   quantity?: number;
   InsertDate?: number | string;
+  InsertTime?: number | string;
   barcode: string;
   image: File | string;
 };

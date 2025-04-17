@@ -12,7 +12,7 @@ export default [
       globals: globals.browser,
       parserOptions: {
         ecmaVersion: 'latest',
-        ecmaFeatures: { jsx: true,tsx:true ,ts:true},
+        ecmaFeatures: { jsx:true},
         sourceType: 'module',
       },
     },

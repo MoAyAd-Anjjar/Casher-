@@ -17,6 +17,10 @@ const Debt = () => {
   const [PersonDebtNotes, setPersonDebtNotes] = useState<string>("");
   const [PersonDebtList, setPersonDebtList] = useState<Product[] | any>([]);
   const [PersonDebtName, setPersonDebtName] = useState<string>("");
+  const [PersonDebtDate, setPersonDebtDate] = useState<any>();
+  const [FilteredPersonDebtList, setFilteredPersonDebtList] = useState<
+    Product[] | any
+  >([]);
 
   useEffect(() => {
     const getUsers = async () => {
@@ -26,15 +30,18 @@ const Debt = () => {
       }
 
       const result: DebtFormData[] = await window.electronAPI.GetUsersInfo();
-      
-      
+
       if (result.length > 0) {
         setPeopleData(result);
       }
     };
     getUsers();
+    const today = new Date();
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 2);
+    const formattedDate = firstDayOfMonth.toISOString().split("T")[0]; // "2024-06-01"
+    setPersonDebtDate(formattedDate);
   }, []);
-  var HandelSearch = (value: number | string) => {
+  const HandelSearch = (value: string) => {
     if (value.toString().trim()) {
       const filtered: any = PeopleData.filter(
         (pr) => pr.name.toLowerCase() === value.toString().trim().toLowerCase()
@@ -42,16 +49,14 @@ const Debt = () => {
 
       if (filtered.length > 0) {
         const firstMatch = filtered[0];
-
+        setFilteredPersonDebtList(JSON.parse(firstMatch.DebtList) || []);
         if (firstMatch.DebtList != null && firstMatch != null) {
           setPersonDebtNotes(firstMatch.notes);
           setPersonDebtName(firstMatch.name);
 
           setPersonDebtList(JSON.parse(firstMatch.DebtList) || []);
-          ScanProduct.map((pro: Product) =>
-            setPersonDebtList((prev) => [...prev, pro])
-          );
-          const newTotal = ScanProduct.reduce(
+
+          const newTotal = JSON.parse(firstMatch.DebtList).reduce(
             (sum, product) => sum + product.price * (product.quantity || 1),
             0
           );
@@ -61,6 +66,7 @@ const Debt = () => {
           setPersonDebtNotes("");
           setPersonDebtName("");
           setPersonDebtList(null);
+          setFilteredPersonDebtList(null);
           setPersonDebt(0);
         }
       }
@@ -68,11 +74,55 @@ const Debt = () => {
       setPersonDebtNotes("");
       setPersonDebtName("");
       setPersonDebtList(null);
+      setFilteredPersonDebtList(null);
       setPersonDebt(0);
     }
   };
 
-  // Filter data based on selected option
+  const HandelSearchDate = (value: string) => {
+    if (!PersonDebtList) {
+      console.log("Person debt list is null or undefined");
+      return;
+    }
+
+    // Convert the search value to different possible formats
+    const normalizeDate = (dateStr: string) => {
+      // Handle formats like 15/4/2025, 15/04/2025, 2025/4/15, etc.
+      const parts = dateStr.split(/[/-]/);
+
+      if (parts.length === 3) {
+        // If format is DD/MM/YYYY or similar
+        if (parts[0].length === 2) {
+          const [day, month, year] = parts;
+          return `${year.padStart(4, "20")}/${month.padStart(
+            2,
+            "0"
+          )}/${day.padStart(2, "0")}`;
+        }
+        // If format is YYYY/MM/DD or similar
+        else if (parts[0].length === 4) {
+          const [year, month, day] = parts;
+          return `${year}/${month.padStart(2, "0")}/${day.padStart(2, "0")}`;
+        }
+      }
+      return dateStr; // fallback
+    };
+
+    const normalizedSearchValue = normalizeDate(value);
+
+    const filteredPeople = FilteredPersonDebtList.filter(
+      (person) =>
+        person.InsertDate &&
+        normalizeDate(person.InsertDate) === normalizedSearchValue
+    );
+
+    setPersonDebtList(filteredPeople);
+  };
+
+  const RemoveFromList = (index: number) => {
+    console.log(index);
+    
+  };
 
   return (
     <div className="p-6 max-w-6xl mx-auto h-[90vh]">
@@ -94,7 +144,9 @@ const Debt = () => {
         <InputField
           name="userData"
           type="date"
+          defaultValue={PersonDebtDate}
           label=" تاريخ الدين"
+          onChange={(e) => HandelSearchDate(e.target.value)}
         ></InputField>
         <InputField
           name="userDebt"
@@ -173,7 +225,8 @@ const Debt = () => {
                   </td>
 
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {person.InsertDate}
+  
+                    {person.InsertDate}:--:{person.InsertTime}
                   </td>
 
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -186,7 +239,10 @@ const Debt = () => {
                     {person.quantity || 1}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm ">
-                    <button className="text-white bg-red-500">
+                    <button
+                      className="text-white bg-red-500"
+                      onClick={()=>RemoveFromList(index)}
+                    >
                       ازاله من القائمة
                     </button>
                   </td>

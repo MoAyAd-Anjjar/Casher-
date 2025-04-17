@@ -43,7 +43,7 @@ function DataProvider({ children }: ChildrenNode) {
         const alreadyExists = prev.some((product) => product.id === value.id);
 
         if (!alreadyExists) {
-          value = { ...value, InsertDate: formatDateDDMMYY(new Date()) };
+          value = { ...value, InsertDate: formatDateDDMMYY(new Date()),InsertTime: new Date().toTimeString().split(' ')[0] };
           return [...prev, value];
         } else {
           toast.info(`المنتج ${value.name} موجود مسبقاً`);
