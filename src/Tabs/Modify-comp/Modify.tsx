@@ -8,16 +8,16 @@ import { toast } from "react-toastify";
 const Modify = () => {
   const [ViewIMG, setViewIMG] = useState<string>("");
   const [Clicked, setClicked] = useState(false);
-  const [barcode, setbarcode] = useState<string|null>(null)
-  const [Type, setType] = useState<"delete"|"update"| null>(null)
+  const [barcode, setbarcode] = useState<string | null>(null);
+  const [Type, setType] = useState<"delete" | "update" | null>(null);
   const [SelectedProduct, setSelectedProduct] = useState<Product>({
     name: "",
     vendor: "",
     barcode: "",
     image: "",
-    price: 0 // Added missing price field to match your form
+    price: 0, // Added missing price field to match your form
   });
-  const { ScanResult,setPage ,setScannedResult} = useData();
+  const { ScanResult, setPage, setScannedResult } = useData();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -38,12 +38,11 @@ const Modify = () => {
         );
 
         if (result) {
-          setbarcode(result.barcode)
+          setbarcode(result.barcode);
           setSelectedProduct(result);
           setViewIMG(result.image || "");
-        }
-        else {
-            toast.warn("لا يوجد منتج يحمل الرقم المدخل")
+        } else {
+          toast.warn("لا يوجد منتج يحمل الرقم المدخل");
         }
         setError(null);
       } catch (error) {
@@ -54,7 +53,7 @@ const Modify = () => {
       }
     };
 
-    if (ScanResult!="") {
+    if (ScanResult != "") {
       getList();
     }
   }, [ScanResult]);
@@ -64,29 +63,52 @@ const Modify = () => {
     setSelectedProduct((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setSelectedProduct((prev) => ({ ...prev, image: e.target.files![0] }));
     }
-    setViewIMG(URL.createObjectURL(e.target.files![0]))
-  };
+    setViewIMG(URL.createObjectURL(e.target.files![0]));
+    try {
+      const arrayBuffer = await e.target.files![0].arrayBuffer();
+      const fileData = {
+        name: e.target.files![0].name,
+        type: e.target.files![0].type,
+        data: Array.from(new Uint8Array(arrayBuffer)),
+      };
 
+      // 4. Invoke IPC to save file
+      const savedPath = await window.electronAPI.SaveIMG(fileData);
+
+      // 5. Update state with saved path
+      if (savedPath) {
+        setSelectedProduct((prev) => ({ ...prev, image: savedPath }));
+      }
+    } catch (err) {
+      console.error("Error handling image change:", err);
+    }
+  };
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setType("update")
+    setType("update");
     setClicked(!Clicked);
   };
 
   const handleDelete = (e: React.FormEvent) => {
     e.preventDefault();
-    setType("delete")
+    setType("delete");
     setClicked(!Clicked);
-    
   };
 
   return (
     <>
-      {Clicked && <Model barcode={barcode}  Data={SelectedProduct} type={Type} Clicked={Clicked} />}
+      {Clicked && (
+        <Model
+          barcode={barcode}
+          Data={SelectedProduct}
+          type={Type}
+          Clicked={Clicked}
+        />
+      )}
       <div className="max-w-screen-2xl rtl:* mx-auto p-6 bg-white shadow-xl rounded-xl flex w-max flex-col transform transition-all duration-500 hover:scale-105 hover:shadow-2xl">
         <h2 className="text-2xl font-bold mb-6 text-center text-gray-700">
           تعديل منتج الحالي
@@ -163,7 +185,9 @@ const Modify = () => {
               className="w-full border p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
             />
             <div className="w-full align-bottom flex justify-center">
-              {ViewIMG && <img className="w-[25%] m-2" src={ViewIMG} alt="Product" />}
+              {ViewIMG && (
+                <img className="w-[25%] m-2" src={ViewIMG} alt="Product" />
+              )}
             </div>
           </div>
           <div className="flex">

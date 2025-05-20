@@ -109,7 +109,7 @@ const ProductHook = () => {
                 product.name,
                 product.vendor,
                 product.price,
-                product.image,
+                JSON.stringify(product.image),
                 product.barcode
               ],
               function(err) {

@@ -8,4 +8,6 @@ contextBridge.exposeInMainWorld("electronAPI", {
   CreateUserInfo: (Debt) => ipcRenderer.invoke("Create-User-info", Debt),
   GetUsersInfo: () => ipcRenderer.invoke("Get-User-info"),
   AddUsersDebt: (Debt) => ipcRenderer.invoke("Add-User-info", Debt),
+  DeleteUserProduct:(time,id,CostumerID)=> ipcRenderer.invoke("Delete-User-List", time,id,CostumerID),
+  SaveIMG: (fileData) => ipcRenderer.invoke("get-userData-path",fileData),
 });

@@ -72,14 +72,14 @@ const DebtHook = () => {
 
         if (row) {
           // Parse existing DebtList (default to empty array if missing/invalid)
-          const existingDebts = Array.isArray(JSON.parse(row.DebtList || "[]"))
-            ? JSON.parse(row.DebtList)
-            : [];
-          console.log(existingDebts);
+          const existingDebts = JSON.parse(row.DebtList);
+
+          console.log("1", existingDebts);
 
           // Merge with new debts (assuming Debt.DebtList is an array)
+
           const newList = [...existingDebts, ...Debt.DebtList];
-          console.log(newList);
+          console.log("2", newList);
           if (newList) {
             await new Promise((resolve, reject) => {
               db.run(
@@ -90,16 +90,58 @@ const DebtHook = () => {
             });
             return true;
           }
-        }
-        else
-        return false;
+        } else return false;
       } catch (error) {
         console.error("Error in Add-User-info:", error);
         return false;
       }
     });
   };
-  return { Create_User_Info, Get_User_Info, Add_User_Debt };
+
+  const Delete_User_Product = (db) => {
+    ipcMain.handle("Delete-User-List", async (_, time,id,CostumerID) => {
+        try {
+          const row = await new Promise((resolve, reject) => {
+            db.get(
+              "SELECT * FROM debts    WHERE CostumerID = ?",[CostumerID],
+              (err, row) => (err ? reject(err) : resolve(row))
+            );
+          });
+          if(row)
+          { 
+          const rowparse=JSON.parse(row.DebtList);
+            
+            const newList=rowparse.filter((item) => item.id !== id && item.InsertTime !== time);
+            await new Promise((resolve, reject) => {
+              db.run(
+                "UPDATE debts SET DebtList = ? WHERE CostumerID = ?",
+                [JSON.stringify(newList), CostumerID],
+                (err) => (err ? reject(err) : resolve())
+              );
+            });
+            return true;
+          }
+          else
+          {
+            console.log("no data found");
+            return false;
+            
+          }
+  
+        } catch (error) {
+          console.error("Error in Add-User-info:", error);
+          return false;
+        }
+
+    });
+  };
+
+  return {
+    Create_User_Info,
+    Get_User_Info,
+    Add_User_Debt,
+    Delete_User_Product,
+  };
 };
 
 export default DebtHook;

@@ -8,7 +8,7 @@ import { DebtFormData } from "../../Type/Types";
 export default function ModelDebt({ Clicked, Change, Data }) {
   const [ViewModel, setViewModel] = useState(false);
   const [FilterArray, setFilterArray] = useState<string[]>([]);
-  const { setPage, setScannedResult, PeopleNames, ScanProduct } = useData();
+  const { setPage, setScannedResult, PeopleNames, ScanProduct ,setScannedProductList} = useData();
   const [SelectedClient, setSelectedClient] = useState("");
   const modalRef = useRef<HTMLDivElement>(null);
   const selectRef = useRef<HTMLSelectElement>(null);
@@ -38,16 +38,17 @@ export default function ModelDebt({ Clicked, Change, Data }) {
       const ChangeDebtList = JSON.parse(SelectedCustomer?.DebtList)||[];
       const FullCustomerInfo:any = {
         ...SelectedCustomer,
-        DebtList: [...ChangeDebtList, ...ScanProduct],
+        DebtList: [... ScanProduct],
       };
-      console.log(FullCustomerInfo);
-      const success: boolean = await window.electronAPI.AddUsersDebt(FullCustomerInfo);
-      console.log(success);
-      
-      if (success && ScanProduct.length>0)
-       toast.success("نو ارفاق الدين بنجاح")
-      else
-       toast.error("حدث خطأ أثناء ارفاق الدين")
+      if(ScanProduct.length>0)
+      {
+        const success: boolean = await window.electronAPI.AddUsersDebt(FullCustomerInfo);
+        if (success)
+          {toast.success("نو ارفاق الدين بنجاح")
+          setScannedProductList([]);}
+        else
+        toast.error("حدث خطأ أثناء ارفاق الدين")
+      }
         
       CloseModel();
       setFilterArray([]);

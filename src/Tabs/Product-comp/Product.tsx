@@ -3,6 +3,8 @@ import { useState } from "react";
 import {useData} from "../../Provider/DataProvider"
 import { toast } from "react-toastify";
 import { Product } from "../../Type/Types";
+import fs from 'fs';
+import path from 'path';
 const ProductForm = () => {
   const [ViewIMG, setViewIMG] = useState<null| string>("")
   const {setPage}=useData()
@@ -19,13 +21,39 @@ const ProductForm = () => {
     setProduct((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setProduct((prev) => ({ ...prev, image: e.target.files![0] }));
-    }
-    setViewIMG(URL.createObjectURL(e.target.files![0]))
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+  
+    const selectedFile = e.target.files[0];
+    
+    try {
+      // 1. Update state with the selected file
+      
+      // 2. Create preview URL
+      const previewUrl = URL.createObjectURL(selectedFile);
+      setViewIMG(previewUrl);
+      
+      // 3. Send file data to main process for saving
+      const arrayBuffer = await selectedFile.arrayBuffer();
+      const fileData = {
+        name: selectedFile.name,
+        type: selectedFile.type,
+        data: Array.from(new Uint8Array(arrayBuffer))
+      };
+      
+      // 4. Invoke IPC to save file
+      const savedPath = await window.electronAPI.SaveIMG(fileData)
+      
+      // 5. Update state with saved path
+      if (savedPath) {
+        setProduct((prev) => ({ ...prev, image: savedPath }));
 
+      }
+    } catch (err) {
+      console.error('Error handling image change:', err);
+    }
   };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -33,7 +61,8 @@ const ProductForm = () => {
       toast.error("Electron API not available");
       return;
     }
-  
+    console.log(product);
+    
     try {
       const success = await window.electronAPI.CreateProduct(product);
       console.log(success);

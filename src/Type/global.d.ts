@@ -13,8 +13,8 @@ declare global {
       GetUsersInfo: () =>Promise<DebtFormData[]>;
       GetUsersDebt: (Info: Product) => Promise<boolean>;
       AddUsersDebt: (Info: DebtFormData) => Promise<boolean>;
-      DeleteUserProduct: (Info: Product) => Promise<boolean>;
-
+      DeleteUserProduct: (time:string,id: number,userid:number) => Promise<boolean>;
+      SaveIMG:(fileData: any) => Promise<string>;
 
 
       // If you're using invoke (recommended for Electron's contextBridge)

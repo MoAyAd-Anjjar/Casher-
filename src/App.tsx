@@ -10,7 +10,6 @@ import Modify from "./Tabs/Modify-comp/Modify";
 import User from "./Tabs/User-comp/User";
 import useProduct from "./hook/ProductHook";
 import { useData } from "./Provider/DataProvider";
-import Model from "./Tabs/model/modle";
 
 function App() {
 

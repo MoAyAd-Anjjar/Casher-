@@ -7,7 +7,7 @@ export type Product = {
   InsertDate?: number | string;
   InsertTime?: number | string;
   barcode: string;
-  image: File | string;
+  image: File | string|any;
 };
 
 export interface DebtFormData {

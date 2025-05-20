@@ -11,7 +11,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const { Create_Product, Delete_Product, Update_Product, Get_Product } =
   ProductHook();
-  const { Create_User_Info,Get_User_Info,Add_User_Debt } = DebtHook();
+  const { Create_User_Info,Get_User_Info,Add_User_Debt ,Delete_User_Product} = DebtHook();
 
 // Use userData directory for better cross-platform compatibility
 const dbPath = path.join(app.getPath("userData"), "POS.database");
@@ -141,6 +141,31 @@ app.whenReady().then(async () => {
     if (process.platform === "win32") {
       app.setAppUserModelId("com.Casher.app"); // Important for Windows notifications
     }
+    ipcMain.handle('get-userData-path', (event, fileData) => {
+      try {
+        const appDataPath = app.getPath('appData');
+        const appImagesDir = path.join(appDataPath, 'Casher', 'images');
+        
+        // Create directory if it doesn't exist
+        if (!fs.existsSync(appImagesDir)) {
+          fs.mkdirSync(appImagesDir, { recursive: true });
+        }
+        
+        // Create unique filename
+        const fileExt = path.extname(fileData.name) || '.png';
+        const fileName = `img_${Date.now()}${fileExt}`;
+        const filePath = path.join(appImagesDir, fileName);
+        
+        // Save file
+        fs.writeFileSync(filePath, Buffer.from(fileData.data));
+        
+        return filePath;
+      } catch (err) {
+        console.error('Error saving image:', err);
+        return null;
+      }
+    });
+
     await initializeDatabase();
     await createWindow();
     await Create_Product(db);
@@ -150,6 +175,7 @@ app.whenReady().then(async () => {
     await Create_User_Info(db)
     await Get_User_Info(db)
     await Add_User_Debt(db)
+    await Delete_User_Product(db)
   } catch (error) {
     console.error("App initialization failed:", error);
     app.quit();

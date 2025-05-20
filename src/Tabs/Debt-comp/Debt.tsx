@@ -4,12 +4,6 @@ import { useData } from "../../Provider/DataProvider";
 import { Product, DebtFormData } from "../../Type/Types";
 import InputField from "../../common/Input";
 
-// Define types for our data
-
-// Sample data
-
-// Filter options
-type FilterOption = "all" | "active" | "inactive" | "on leave" | "none";
 const Debt = () => {
   const { setPage, ScanProduct } = useData();
   const [PeopleData, setPeopleData] = useState<DebtFormData[]>([]);
@@ -18,6 +12,7 @@ const Debt = () => {
   const [PersonDebtList, setPersonDebtList] = useState<Product[] | any>([]);
   const [PersonDebtName, setPersonDebtName] = useState<string>("");
   const [PersonDebtDate, setPersonDebtDate] = useState<any>();
+  const [PersonID, setPersonID] = useState<number|any>()
   const [FilteredPersonDebtList, setFilteredPersonDebtList] = useState<
     Product[] | any
   >([]);
@@ -53,7 +48,7 @@ const Debt = () => {
         if (firstMatch.DebtList != null && firstMatch != null) {
           setPersonDebtNotes(firstMatch.notes);
           setPersonDebtName(firstMatch.name);
-
+          setPersonID(firstMatch.CostumerID)
           setPersonDebtList(JSON.parse(firstMatch.DebtList) || []);
 
           const newTotal = JSON.parse(firstMatch.DebtList).reduce(
@@ -68,6 +63,7 @@ const Debt = () => {
           setPersonDebtList(null);
           setFilteredPersonDebtList(null);
           setPersonDebt(0);
+          setPersonID(0)
         }
       }
     } else {
@@ -76,6 +72,8 @@ const Debt = () => {
       setPersonDebtList(null);
       setFilteredPersonDebtList(null);
       setPersonDebt(0);
+      setPersonID(0)
+
     }
   };
 
@@ -119,8 +117,16 @@ const Debt = () => {
     setPersonDebtList(filteredPeople);
   };
 
-  const RemoveFromList = (index: number) => {
-    console.log(index);
+  const RemoveFromList = async (time: string,id:number) => {
+    if(PersonID &&id&&time )
+    setPersonDebtList(PersonDebtList.filter((item:Product) => item.InsertTime !== time && item.id !== id));
+    const success=  await window.electronAPI.DeleteUserProduct(time,id,PersonID)
+    if(success){
+    console.log(time,id);
+    }
+    else
+    console.log("error");
+
     
   };
 
@@ -241,7 +247,7 @@ const Debt = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm ">
                     <button
                       className="text-white bg-red-500"
-                      onClick={()=>RemoveFromList(index)}
+                      onClick={()=>RemoveFromList(person.InsertTime,person.barcode)}
                     >
                       ازاله من القائمة
                     </button>

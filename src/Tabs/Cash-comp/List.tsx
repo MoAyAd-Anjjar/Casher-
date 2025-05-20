@@ -3,7 +3,9 @@ import cashStyle from "./Cash.module.scss";
 import Camera from "./Camera";
 import { useData } from "../../Provider/DataProvider";
 import { DebtFormData, Product } from "../../Type/Types";
-import ModelDebt from "../model/ModelDbet";
+import ModelDebt from "../Model/ModelDbet";
+import { FaImage } from "react-icons/fa";
+
 
 const List = () => {
   const { ScanProduct, setScannedProductList,setPeopleNames } = useData();
@@ -14,7 +16,7 @@ const List = () => {
   // Calculate total whenever ScanProduct changes
   React.useEffect(() => {
     const newTotal = ScanProduct.reduce(
-      (sum, product) => sum + (product.price * (product.quantity || 1)), 
+      (sum, product:any) => sum + (product.price * (product.quantity || 1)), 
       0
     );
     setTotal(newTotal);
@@ -24,7 +26,7 @@ const List = () => {
     const quantity = Number(value);
     if (isNaN(quantity) || quantity < 1) return;
 
-    const updatedScanProduct = ScanProduct.map(item => 
+    const updatedScanProduct:any = ScanProduct.map(item => 
       item.barcode === barcode ? { ...item, quantity } : item
     );
     
@@ -51,7 +53,7 @@ const List = () => {
             <div className={cashStyle["flex-list"]} key={`${product.id}-${product.barcode}`}>
               <img
                 className="size-[35px] bg-transparent"
-                src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTDU-J6J7T4VieQJ_s-puomSF2Do4CnbW-TEA&s"
+                src={JSON.parse(product.image)}
                 alt={product.name}
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = 'fallback-image-url';
